@@ -70,7 +70,7 @@ class FrankaDatasetTraj(Dataset):
 
     def subsample_demos(self):
         for traj in self.demos:
-            for key in ['cam0c', 'observations', 'actions', 'terminated', 'rewards']:
+            for key in ['cam0c', 'cam0d', 'observations', 'actions', 'terminated', 'rewards', 'embeddings']:
                 if key == 'observations':
                     traj[key] = traj[key][:, :self.obs_dim]
                 if key == 'rewards':
@@ -81,31 +81,24 @@ class FrankaDatasetTraj(Dataset):
                     traj[key] = traj[key][::self.subsample_period]
 
     def process_demos(self):
-        inputs, labels = [], []
-        cnt = 0
-        for traj in self.demos:
+        self.idx = []
+        for i, traj in enumerate(self.demos):
             if traj['actions'].shape[0] > self.H:
                 for start in range(traj['actions'].shape[0] - self.H + 1):
-                    inputs.append(traj['observations'][start])
-                    labels.append(traj['actions'][start : start + self.H, :]) 
+                    self.idx.append((i, start, start + self.H))
             else:
-                extended_actions = np.vstack([traj['actions'], np.tile(traj['actions'][-1], [self.H - traj['actions'].shape[0], 1])]) # pad short trajs with the last action
-                inputs.append(traj['observations'][0])
-                labels.append(extended_actions)
-        inputs = np.stack(inputs, axis=0).astype(np.float64)
-        labels = np.stack(labels, axis=0).astype(np.float64)
-        if self.cameras:
-            images = []
-            for traj in self.demos:
-                if traj['actions'].shape[0] > self.H:
-                    for start in range(traj['actions'].shape[0] - self.H + 1):
-                        images.append(traj['images'][start])
-                else:
-                    images.append(traj['images'][0])
-            self.images = images
-        self.inputs = np_to_tensor(inputs, self.device)
-        self.labels = np_to_tensor(labels, self.device)
-        self.labels = self.labels.reshape([self.labels.shape[0], -1]) # flatten actions to (#trajs, H * action_dim)
+                self.idx.append((traj["traj_id"], 0, traj['actions'].shape[0]))
+
+        # if self.cameras:
+        #     images = []
+        #     for traj in self.demos:
+        #         if traj['actions'].shape[0] > self.H:
+        #             for start in range(traj['actions'].shape[0] - self.H + 1):
+        #                 images.append(traj['images'][start])
+        #         else:
+        #             images.append(traj['images'][0])
+        #     self.images = images
+        # self.labels = self.labels.reshape([self.labels.shape[0], -1]) # flatten actions to (#trajs, H * action_dim)
 
     def load_imgs(self):
         print("Start loading images...")
@@ -118,24 +111,32 @@ class FrankaDatasetTraj(Dataset):
 
 
     def __len__(self):
-        return self.inputs.shape[0]
+        return len(self.idx)
 
     def __getitem__(self, idx):
-        datapoint = {
-                'inputs': self.inputs[idx],
-                'labels': self.labels[idx],
-                }
-        if self.noise:
-            datapoint['inputs'] += torch.randn_like(datapoint['inputs']) * self.noise
-        if self.cameras:
-            for _c in self.cameras:
-                try:
-                    img = Image.open(self.images[idx])
-                except:
-                    print("\n***Image path does not exist. Set the image directory as logs_folder in the config.")
-                    raise
-                datapoint[_c] = img.crop((200, 0, 500, 400)) if self.crop_images else img
-                datapoint[_c] = (self.img_transform_fn(datapoint[_c]) if self.img_transform_fn
-                                 else datapoint[_c])
-                img.close()
+        datapoint = dict()
+        traj_id, start, end = self.idx[idx]
+        traj = self.demos[traj_id]
+        for key in ['observations', 'actions', 'rewards', 'embeddings']:
+            if key == "rewards":
+                datapoint[key] = np.zeros((self.H))
+                datapoint[key][:end] = traj[key][start:end]
+            else:
+                datapoint[key] = np.zeros((self.H, traj[key].shape[1]))
+                datapoint[key][:end, :] = traj[key][start:end, :]
+            datapoint[key] = np_to_tensor(datapoint[key], self.device)
+
+        # if self.noise:
+        #     datapoint['inputs'] += torch.randn_like(datapoint['inputs']) * self.noise
+        # if self.cameras:
+        #     for _c in self.cameras:
+        #         try:
+        #             img = Image.open(self.images[idx])
+        #         except:
+        #             print("\n***Image path does not exist. Set the image directory as logs_folder in the config.")
+        #             raise
+        #         datapoint[_c] = img.crop((200, 0, 500, 400)) if self.crop_images else img
+        #         datapoint[_c] = (self.img_transform_fn(datapoint[_c]) if self.img_transform_fn
+        #                          else datapoint[_c])
+        #         img.close()
         return datapoint
