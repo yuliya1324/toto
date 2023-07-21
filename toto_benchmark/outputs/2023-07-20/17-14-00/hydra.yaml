@@ -1,0 +1,33 @@
+default:
+- override hydra/output: local
+- override hydra/launcher: local
+data:
+  pickle_fn: ../assets/cloud-dataset-scooping/scooping_parsed_with_embeddings_moco_conv5_robocloud.pkl
+  subsample_period: 1
+  in_dim: 2055
+  out_dim: 7
+  H: 50
+  top_k: null
+  images:
+    cameras: []
+    im_h: 480
+    im_w: 640
+    per_img_out: 2048
+    crop: true
+  noise: 0.0
+  logs_folder: ../assets/cloud-dataset-scooping
+agent:
+  type: bcimage_pre
+  vision_model: moco_conv5_robocloud
+  vision_model_path: None
+  description: NA
+  hidden_dim: 128
+training:
+  lr: 0.001
+  seed: 0
+  epochs: 80
+  device: cpu
+  batch_size: 128
+  save_every_x_epoch: 10
+debug: true
+saved_folder: /home/julia/toto_benchmark/toto_benchmark/outputs/2023-07-20/17-14-00
