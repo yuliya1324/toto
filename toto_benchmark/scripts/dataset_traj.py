@@ -56,6 +56,10 @@ class FrankaDatasetTraj(Dataset):
 
     def pick_high_reward_trajs(self):
         original_data_size = len(self.demos)
+        rewards = [traj["rewards"][-1] for traj in self.demos]
+        rewards.sort(reverse=True)
+        top_rewards = rewards[:int(original_data_size*0.1)]
+        self.r_init = sum(top_rewards) / len(top_rewards)
         if self.top_k == None: # assumed using all successful traj (reward > 0)
             self.demos = [traj for traj in self.demos if traj['rewards'][-1] > 0]
             print(f"Using {len(self.demos)} number of successful trajs. Total trajs: {original_data_size}")
@@ -83,11 +87,20 @@ class FrankaDatasetTraj(Dataset):
     def process_demos(self):
         self.idx = []
         for i, traj in enumerate(self.demos):
-            if traj['actions'].shape[0] > self.H:
-                for start in range(traj['actions'].shape[0] - self.H + 1):
-                    self.idx.append((i, start, start + self.H))
-            else:
-                self.idx.append((traj["traj_id"], 0, traj['actions'].shape[0]))
+            start = 0
+            end = self.H
+            while end < traj['actions'].shape[0]:
+                self.idx.append((i, start, end))
+                start += self.H
+                end += self.H
+            self.idx.append((i, start, traj['actions'].shape[0]))
+
+
+            # if traj['actions'].shape[0] > self.H:
+            #     for start in range(traj['actions'].shape[0] - self.H + 1):
+            #         self.idx.append((i, start, start + self.H))
+            # else:
+            #     self.idx.append((traj["traj_id"], 0, traj['actions'].shape[0]))
 
         # if self.cameras:
         #     images = []
@@ -120,10 +133,14 @@ class FrankaDatasetTraj(Dataset):
         for key in ['observations', 'actions', 'rewards', 'embeddings']:
             if key == "rewards":
                 datapoint[key] = np.zeros((self.H))
-                datapoint[key][:end] = traj[key][start:end]
+                reward = np.empty(end-start)
+                reward.fill(self.r_init)
+                reward[-1] -= traj[key][-1]
+                datapoint[key][:end-start] = reward
+                datapoint[key] = np.expand_dims(datapoint[key], axis=-1)
             else:
                 datapoint[key] = np.zeros((self.H, traj[key].shape[1]))
-                datapoint[key][:end, :] = traj[key][start:end, :]
+                datapoint[key][:end-start, :] = traj[key][start:end, :]
             datapoint[key] = np_to_tensor(datapoint[key], self.device)
 
         # if self.noise:

@@ -8,9 +8,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-sys.path.append('utils')
-from proj_adaptive_softmax import ProjectedAdaptiveLogSoftmax
-from log_uniform_sampler import LogUniformSampler, sample_logits
+# sys.path.append('utils')
+# from utils.proj_adaptive_softmax import ProjectedAdaptiveLogSoftmax
+# from utils.log_uniform_sampler import LogUniformSampler, sample_logits
 
 class PositionalEmbedding(nn.Module):
     def __init__(self, demb):
@@ -247,6 +247,8 @@ class RelPartialLearnableMultiHeadAttn(RelMultiHeadAttn):
 
         #### compute attention score
         rw_head_q = w_head_q + r_w_bias                                         # qlen x bsz x n_head x d_head
+        a = rw_head_q.isnan().any()
+        b = w_head_k.isnan().any()
         AC = torch.einsum('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
 
         rr_head_q = w_head_q + r_r_bias
@@ -502,14 +504,14 @@ class AdaptiveEmbedding(nn.Module):
         return embed
 
 class MemTransformerLM(nn.Module):
-    def __init__(self, n_token, n_layer, n_head, d_model, d_head, d_inner,
+    def __init__(self, n_layer, n_head, d_model, d_head, d_inner,
                  dropout, dropatt, tie_weight=True, d_embed=None, 
                  div_val=1, tie_projs=[False], pre_lnorm=False,
                  tgt_len=None, ext_len=None, mem_len=None, 
                  num_mem_tokens=None, read_mem_from_cache=False, mem_at_end=True,
                  cutoffs=[], adapt_inp=False,
-                 same_length=False, attn_type=0, clamp_len=-1, 
-                 sample_softmax=-1, STATE_DIM=None, ACTION_DIM=None):
+                 same_length=False, attn_type=0, clamp_len=-1, max_ep_len=100,
+                 sample_softmax=-1, STATE_DIM=None, ACTION_DIM=None, IMG_DIM=None, n_token=None):
         super(MemTransformerLM, self).__init__()
         #self.n_token = n_token
 
@@ -520,7 +522,9 @@ class MemTransformerLM(nn.Module):
         self.d_head = d_head
         self.STATE_DIM = STATE_DIM
         self.ACTION_DIM = ACTION_DIM
-        self.mujoco_mode = STATE_DIM is not None
+        self.IMG_DIM = IMG_DIM
+        self.mujoco_mode = None
+        self.toto_mode = IMG_DIM is not None
         if self.mujoco_mode:
             # Mujoco mode
             self.embed_timestep = nn.Embedding(max_ep_len, d_embed)
@@ -531,6 +535,15 @@ class MemTransformerLM(nn.Module):
             self.embed_ln = nn.LayerNorm(d_embed)
 
 
+            self.head = nn.Sequential(*([nn.Linear(d_embed, self.ACTION_DIM)] + ([nn.Tanh()])))
+
+        elif self.toto_mode:
+            self.embed_timestep = nn.Embedding(max_ep_len, d_embed)
+            self.ret_emb = nn.Linear(1, d_embed)
+            self.state_encoder = nn.Linear(self.STATE_DIM, d_embed) #RMT MUJOCO
+            self.action_embeddings = nn.Linear(self.ACTION_DIM, d_embed) #RMT MUJOCO
+            self.img_embeddings = nn.Linear(self.IMG_DIM, d_embed) #RMT MUJOCO
+            self.embed_ln = nn.LayerNorm(d_embed)
             self.head = nn.Sequential(*([nn.Linear(d_embed, self.ACTION_DIM)] + ([nn.Tanh()])))
         
         else:
@@ -585,32 +598,32 @@ class MemTransformerLM(nn.Module):
                         dropatt=dropatt, pre_lnorm=pre_lnorm)
                 )
 
-        self.sample_softmax = sample_softmax
-        # use sampled softmax
-        if sample_softmax > 0:
-            self.out_layer = nn.Linear(d_model, n_token)
-            if tie_weight:
-                self.out_layer.weight = self.word_emb.weight
-            self.tie_weight = tie_weight
-            self.sampler = LogUniformSampler(n_token, sample_softmax)
+        # self.sample_softmax = sample_softmax
+        # # use sampled softmax
+        # if sample_softmax > 0:
+        #     self.out_layer = nn.Linear(d_model, n_token)
+        #     if tie_weight:
+        #         self.out_layer.weight = self.word_emb.weight
+        #     self.tie_weight = tie_weight
+        #     self.sampler = LogUniformSampler(n_token, sample_softmax)
 
-        # use adaptive softmax (including standard softmax)
-        else:
-            self.crit = ProjectedAdaptiveLogSoftmax(n_token, d_embed, d_model, 
-                                                    cutoffs, div_val=div_val)
+        # # use adaptive softmax (including standard softmax)
+        # else:
+        #     self.crit = ProjectedAdaptiveLogSoftmax(n_token, d_embed, d_model, 
+        #                                             cutoffs, div_val=div_val)
 
-            if tie_weight:
-                for i in range(len(self.crit.out_layers)):
-                    self.crit.out_layers[i].weight = self.word_emb.emb_layers[i].weight
+        #     if tie_weight:
+        #         for i in range(len(self.crit.out_layers)):
+        #             self.crit.out_layers[i].weight = self.word_emb.emb_layers[i].weight
 
-            if tie_projs:
-                for i, tie_proj in enumerate(tie_projs):
-                    if tie_proj and div_val == 1 and d_model != d_embed:
-                        self.crit.out_projs[i] = self.word_emb.emb_projs[0]
-                        setattr(self.crit, f'out_projs_{i}', self.word_emb.emb_projs_0)
-                    elif tie_proj and div_val != 1:
-                        setattr(self.crit, f'out_projs_{i}', getattr(self.word_emb, f'emb_projs_{i}'))
-                        self.crit.out_projs[i] = self.word_emb.emb_projs[i]
+        #     if tie_projs:
+        #         for i, tie_proj in enumerate(tie_projs):
+        #             if tie_proj and div_val == 1 and d_model != d_embed:
+        #                 self.crit.out_projs[i] = self.word_emb.emb_projs[0]
+        #                 setattr(self.crit, f'out_projs_{i}', self.word_emb.emb_projs_0)
+        #             elif tie_proj and div_val != 1:
+        #                 setattr(self.crit, f'out_projs_{i}', getattr(self.word_emb, f'emb_projs_{i}'))
+        #                 self.crit.out_projs[i] = self.word_emb.emb_projs[i]
                         # self.crit.out_projs[i] = getattr(self.word_emb, f'emb_projs_{i}')
 
         self.same_length = same_length
@@ -807,7 +820,7 @@ class MemTransformerLM(nn.Module):
 
         return core_out, new_mems
 
-    def forward(self, states, actions, rtgs, target, timesteps, *mems, mem_tokens=None): 
+    def forward(self, states, actions, rtgs, target, timesteps, *mems, mem_tokens=None, img=None): 
         if self.mujoco_mode:
             if not mems: mems = self.init_mems(states.device)
             state_embeddings = self.state_encoder(states) 
@@ -850,6 +863,62 @@ class MemTransformerLM(nn.Module):
                 logits = logits[:, 1::3, :]
             else:
                 logits = logits[:, 1:, :]
+
+
+            loss = None
+            if target is not None:
+                loss = nn.MSELoss()(logits, target)
+
+            output = [logits, loss]
+            if new_mems is not None:
+                output = output + new_mems
+
+            if self.num_mem_tokens != 0:
+                output = output, mem_tokens_write.permute(1,0,2)
+            else:
+                output = output, None
+
+            return output
+
+        elif self.toto_mode:
+            if not mems: mems = self.init_mems(states.device)
+            state_embeddings = self.state_encoder(states) 
+            rtg_embeddings = self.ret_emb(rtgs)
+            action_embeddings = self.action_embeddings(actions)
+            img_embeddings = self.img_embeddings(img)
+            token_embeddings = torch.zeros((states.shape[0], states.shape[1]*4 - int(target is None), self.d_embed), dtype=torch.float32, device=state_embeddings.device)
+            timesteps = torch.arange(states.shape[1])
+            time_embeddings = self.embed_timestep(timesteps)
+            time_embeddings = time_embeddings.unsqueeze(0).expand(states.shape[0], time_embeddings.shape[0], time_embeddings.shape[1])
+
+            token_embeddings[:, ::4, :] = rtg_embeddings  + time_embeddings
+            token_embeddings[:, 1::4, :] = state_embeddings  + time_embeddings
+            token_embeddings[:, 2::4, :] = img_embeddings  + time_embeddings
+            token_embeddings[:, 3::4, :] = action_embeddings[:,-states.shape[1] + int(target is None):,:] + time_embeddings[:,-states.shape[1] + int(target is None):,:]
+            
+            hidden, new_mems = self._forward(token_embeddings, mems=mems, mem_tokens=mem_tokens)
+            hidden = hidden.permute(1,0,2)
+
+            num_mem = self.num_mem_tokens
+
+            if self.num_mem_tokens > 0:
+                if self.mem_at_end:
+                    tgt_len = token_embeddings.shape[1]
+                    mem_tokens_write = hidden[:, -num_mem:, :]
+                else:
+                    tgt_len = token_embeddings.shape[1]
+                    mem_tokens_write = hidden[:, -tgt_len-num_mem:-tgt_len, :]
+
+            if self.mem_at_end:
+                logits = self.head(hidden)[:, num_mem:-num_mem]
+            else:
+                tgt_len = token_embeddings.shape[1]
+                logits = self.head(hidden)[:, -tgt_len:] # was tgt_len
+
+            if actions is not None:
+                logits = logits[:, 2::4, :]
+            else:
+                logits = logits[:, 2:, :]
 
 
             loss = None
