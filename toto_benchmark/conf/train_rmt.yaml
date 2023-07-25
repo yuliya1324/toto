@@ -4,10 +4,10 @@ default:
 
 data:
   pickle_fn: assets/cloud-dataset-scooping/scooping_parsed_with_embeddings_moco_conv5_robocloud.pkl
-  subsample_period: 5
+  subsample_period: 20
   in_dim: 7
   out_dim: 7
-  H: 50 # horizon of actions to predict each time
+  H: 60 # horizon of actions to predict each time
   top_k: 1
   images:
     cameras: []
@@ -29,19 +29,19 @@ agent:
 
   n_layer: 3
   n_head: 1
-  d_model: 128 #?
-  d_head: 128 #?
-  d_inner: 128 #?
+  d_model: 128
+  d_head: 128
+  d_inner: 128
   dropout: 0.2 
   dropatt: 0.05
   MEM_LEN: 15
-  ext_len: 1  #?
+  ext_len: 0  #?
   num_mem_tokens: 15 
   mem_at_end: True
-  learning_rate: 0.01 #?
-  # betas: None #?
-  context_length: 50 #?
+  learning_rate: 0.01
+  context_length: 20
   sections: 3
+  grad_norm_clip: 1.0
 
 training:
   lr: 1e-3

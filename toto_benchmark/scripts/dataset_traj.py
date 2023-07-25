@@ -52,7 +52,7 @@ class FrankaDatasetTraj(Dataset):
         self.subsample_demos()
         if len(self.cameras) > 0:
             self.load_imgs()
-        self.process_demos()
+        # self.process_demos()
 
     def pick_high_reward_trajs(self):
         original_data_size = len(self.demos)
@@ -79,10 +79,10 @@ class FrankaDatasetTraj(Dataset):
                     traj[key] = traj[key][:, :self.obs_dim]
                 if key == 'rewards':
                     rew = traj[key][-1]
-                    traj[key] = traj[key][::self.subsample_period]
+                    traj[key] = traj[key][max(-1200, -len(traj[key]))::self.subsample_period]
                     traj[key][-1] = rew
                 else:
-                    traj[key] = traj[key][::self.subsample_period]
+                    traj[key] = traj[key][max(-1200, -len(traj[key]))::self.subsample_period]
 
     def process_demos(self):
         self.idx = []
@@ -124,23 +124,24 @@ class FrankaDatasetTraj(Dataset):
 
 
     def __len__(self):
-        return len(self.idx)
+        return len(self.demos)
 
     def __getitem__(self, idx):
         datapoint = dict()
-        traj_id, start, end = self.idx[idx]
-        traj = self.demos[traj_id]
+        # traj_id, start, end = self.idx[idx]
+        traj = self.demos[idx]
+        datapoint["length"] = traj["observations"].shape[0] * 4
         for key in ['observations', 'actions', 'rewards', 'embeddings']:
             if key == "rewards":
                 datapoint[key] = np.zeros((self.H))
-                reward = np.empty(end-start)
+                reward = np.empty(traj[key].shape[0])
                 reward.fill(self.r_init)
                 reward[-1] -= traj[key][-1]
-                datapoint[key][:end-start] = reward
+                datapoint[key][:traj[key].shape[0]] = reward
                 datapoint[key] = np.expand_dims(datapoint[key], axis=-1)
             else:
                 datapoint[key] = np.zeros((self.H, traj[key].shape[1]))
-                datapoint[key][:end-start, :] = traj[key][start:end, :]
+                datapoint[key][:traj[key].shape[0], :] = traj[key][:traj[key].shape[0], :]
             datapoint[key] = np_to_tensor(datapoint[key], self.device)
 
         # if self.noise:

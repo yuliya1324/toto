@@ -247,8 +247,6 @@ class RelPartialLearnableMultiHeadAttn(RelMultiHeadAttn):
 
         #### compute attention score
         rw_head_q = w_head_q + r_w_bias                                         # qlen x bsz x n_head x d_head
-        a = rw_head_q.isnan().any()
-        b = w_head_k.isnan().any()
         AC = torch.einsum('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
 
         rr_head_q = w_head_q + r_r_bias
@@ -267,6 +265,9 @@ class RelPartialLearnableMultiHeadAttn(RelMultiHeadAttn):
             elif attn_mask.dim() == 3:
                 attn_score = attn_score.float().masked_fill(
                     attn_mask[:,:,:,None].bool(), -float('inf')).type_as(attn_score)
+            elif attn_mask.dim() == 4:
+                attn_score = attn_score.float().masked_fill(
+                    attn_mask[:,:,:,:].bool(), -float('inf')).type_as(attn_score)
 
         # [qlen x klen x bsz x n_head]
         attn_prob = F.softmax(attn_score, dim=1)
@@ -637,8 +638,8 @@ class MemTransformerLM(nn.Module):
     def _create_params(self):
         if self.attn_type == 0: # default attention
             self.pos_emb = PositionalEmbedding(self.d_model)
-            self.r_w_bias = nn.Parameter(torch.Tensor(self.n_head, self.d_head))
-            self.r_r_bias = nn.Parameter(torch.Tensor(self.n_head, self.d_head))
+            self.r_w_bias = nn.Parameter(torch.rand(self.n_head, self.d_head))
+            self.r_r_bias = nn.Parameter(torch.rand(self.n_head, self.d_head))
         elif self.attn_type == 1: # learnable
             self.r_emb = nn.Parameter(torch.Tensor(
                     self.n_layer, self.max_klen, self.n_head, self.d_head))
@@ -700,10 +701,10 @@ class MemTransformerLM(nn.Module):
 
         return new_mems
 
-    def _forward(self, word_emb, mems=None, mem_tokens=None):
+    def _forward(self, word_emb, mems=None, mem_tokens=None, lengths=None):
 
         #word_emb = self.word_emb(dec_inp)
-        bsz, qlen, _ = word_emb.size()
+        bsz, _, _ = word_emb.size()
         word_emb = word_emb.permute(1,0,2)
 
         mlen = mems[0].size(0) if mems is not None else 0
@@ -743,6 +744,13 @@ class MemTransformerLM(nn.Module):
                     dec_attn_mask[-self.num_mem_tokens:, -self.num_mem_tokens:] = 0
                     dec_attn_mask[-self.num_mem_tokens:, :mlen] = 1 - int(self.read_mem_from_cache)
             dec_attn_mask = dec_attn_mask[:,:,None]
+            if lengths is not None:
+                dec_attn_mask = dec_attn_mask.unsqueeze(2).repeat((1, 1, bsz, 1))
+                for i, length in enumerate(lengths):
+                    dec_attn_mask[
+                        length+self.num_mem_tokens:-self.num_mem_tokens, 
+                        length+self.num_mem_tokens:-self.num_mem_tokens, i, :
+                        ] = 1
             
         hids = []
         if self.attn_type == 0: # default
@@ -816,11 +824,11 @@ class MemTransformerLM(nn.Module):
 
         core_out = self.drop(core_out)
 
-        new_mems = self._update_mems(hids, mems, mlen, qlen)
+        new_mems = self._update_mems(hids, mems, qlen, mlen)
 
         return core_out, new_mems
 
-    def forward(self, states, actions, rtgs, target, timesteps, *mems, mem_tokens=None, img=None): 
+    def forward(self, states, actions, rtgs, target, timesteps, *mems, mem_tokens=None, img=None, length=None): 
         if self.mujoco_mode:
             if not mems: mems = self.init_mems(states.device)
             state_embeddings = self.state_encoder(states) 
@@ -840,7 +848,7 @@ class MemTransformerLM(nn.Module):
                 token_embeddings[:,::2,:] = rtg_embeddings # really just [:,0,:]
                 token_embeddings[:,1::2,:] = state_embeddings # really just [:,1,:]
 
-            hidden, new_mems = self._forward(token_embeddings, mems=mems, mem_tokens=mem_tokens)
+            hidden, new_mems = self._forward(token_embeddings, mems=mems, mem_tokens=mem_tokens, q_len=length)
             hidden = hidden.permute(1,0,2)
 
             num_mem = self.num_mem_tokens
@@ -896,7 +904,7 @@ class MemTransformerLM(nn.Module):
             token_embeddings[:, 2::4, :] = img_embeddings  + time_embeddings
             token_embeddings[:, 3::4, :] = action_embeddings[:,-states.shape[1] + int(target is None):,:] + time_embeddings[:,-states.shape[1] + int(target is None):,:]
             
-            hidden, new_mems = self._forward(token_embeddings, mems=mems, mem_tokens=mem_tokens)
+            hidden, new_mems = self._forward(token_embeddings, mems=mems, mem_tokens=mem_tokens, lengths=length)
             hidden = hidden.permute(1,0,2)
 
             num_mem = self.num_mem_tokens

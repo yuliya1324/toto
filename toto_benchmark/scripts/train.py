@@ -98,10 +98,10 @@ def main(cfg : DictConfig) -> None:
         for data in train_loader:
             for key in data:
                 data[key] = data[key].to(cfg.training.device)
-            agent.train(data)
-            acc_loss += agent.loss
-            train_metric.add(agent.loss.item())
-            print('epoch {} \t batch {} \t train {:.6f}'.format(epoch, batch, agent.loss.item()), end='\r')
+            loss = agent.train(data)
+            acc_loss += loss
+            train_metric.add(loss.item())
+            print('epoch {} \t batch {} \t train {:.6f}'.format(epoch, batch, loss.item()), end='\r')
             batch += 1
 
         for data in test_loader:
@@ -112,13 +112,13 @@ def main(cfg : DictConfig) -> None:
         log.info('epoch {} \t train {:.6f} \t test {:.6f}'.format(epoch, train_metric.mean, test_metric.mean))
         log.info(f'Accumulated loss: {acc_loss}')
         if epoch % cfg.training.save_every_x_epoch == 0:
-            agent.save(os.getcwd())
+            agent.save(os.getcwd(), filename=f"RMDT_{epoch}.pth", epoch=epoch)
 
         wandb.log({"Train Loss": train_metric.mean, "Epoch": epoch})
         wandb.log({"Test Loss": test_metric.mean, "Epoch": epoch})
         wandb.log({"Acc Train Loss": acc_loss, "Epoch": epoch})
 
-    agent.save(os.getcwd())
+    agent.save(os.getcwd(), filename=f"RMDT_final.pth")
     log.info("Saved agent to {}".format(os.getcwd()))
 
 if __name__ == '__main__':
