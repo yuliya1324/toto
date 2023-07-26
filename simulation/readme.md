@@ -6,6 +6,7 @@
 
 Перед первым запуском:
 
+- склонировать репозиторий и установить все модули из файла  ```.gitmodules``` по указанным адресам
 - дать права на выполнение скриптов ```sudo chmod +x run-scripts/*sh```
 - собрать окружение для робота** в docker-контейнер: ```sudo docker build -t sim-img . --network=host --build-arg from=ubuntu:20.04```
 
@@ -23,15 +24,18 @@
 - Зайти в docker-контейнер <code>sudo docker exec -ti sim bash</code>
 - Запустить симулятор ```roslaunch franka_gazebo panda.launch```
 - Очистить сборку ```catkin clean```
+- Простое раскачивание робота ```
+cd /workspace/src/libs/panda_simulator/panda_simulator_examples/scripts
+python3 move_robot.py```
 
 
 #### Сообщения для публикации
 
 ```
-rostopic pub /panda_simulator/motion_controller/arm/joint_commands franka_core_msgs/JointCommand "{names: ['panda_joint1', 'panda_joint2', 'panda_joint3', 'panda_joint4', 'panda_joint5', 'panda_joint6', panda_joint7]
-position: [0, 0, 0, 0, 0, 0, 0]
-velocity: [0, 0, 0, 0, 0, 0, 0]
-acceleration: [0, 0, 0, 0, 0, 0, 0]
+rostopic pub /panda_simulator/motion_controller/arm/joint_commands franka_core_msgs/JointCommand "{names: ['panda_joint1', 'panda_joint2', 'panda_joint3', 'panda_joint4', 'panda_joint5', 'panda_joint6', panda_joint7],
+position: [0, 0, 0, 0, 0, 0, 0],
+velocity: [0, 0, 0, 0, 0, 0, 0],
+acceleration: [0, 0, 0, 0, 0, 0, 0],
 effort: [0, 0, 0, 0, 0, 0, 0]}" --once 
 ```
 

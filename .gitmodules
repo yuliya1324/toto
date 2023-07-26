@@ -1,0 +1,18 @@
+[submodule "simulation/src/libs/franka_panda_description"]
+	path = simulation/src/libs/franka_panda_description
+	url = ../../JustaGist/franka_panda_description
+[submodule "simulation/src/libs/franka_ros"]
+	path = simulation/src/libs/franka_ros
+	url = ../../frankaemika/franka_ros
+[submodule "simulation/src/libs/franka_ros_interface"]
+	path = simulation/src/libs/franka_ros_interface
+	url = ../../JustaGist/franka_ros_interface
+[submodule "simulation/src/libs/orocos_kinematics_dynamics"]
+	path = simulation/src/libs/orocos_kinematics_dynamics
+	url = ../../orocos/orocos_kinematics_dynamics
+[submodule "simulation/src/libs/panda_moveit_config"]
+	path = simulation/src/libs/panda_moveit_config
+	url = ../../ros-planning/panda_moveit_config
+[submodule "simulation/src/libs/panda_simulator"]
+	path = simulation/src/libs/panda_simulator
+	url = ../../justagist/panda_simulator
