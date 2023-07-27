@@ -5,7 +5,9 @@
     <light name='sun' type='directional'>
       <cast_shadows>0</cast_shadows>
       <pose frame=''>0 0 10 0 -0 0</pose>
-      <diffuse>0.38 0.38 0.38 1</diffuse>
+      <!-- <diffuse>0.38 0.38 0.38 1</diffuse> -->
+      <!-- <specular>0.2 0.2 0.2 1</specular> -->
+      <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <attenuation>
         <range>1000</range>
@@ -18,10 +20,10 @@
     
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>1.378997 -1.368435 0.478233 -0.000001 -0.000356 2.324201</pose>
+        <pose frame=''>1.330507 -0.841138 1.760539 0.0 0.257797 2.514609</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
-        <clip near="0.1" far="50000"/>
+        <clip near="0.1" far="5000"/>
       </camera>
     </gui>
     <gravity>0 0 -9.8</gravity>
@@ -34,8 +36,10 @@
     </physics>
     <scene>
       <grid>0</grid>
+<!--       <ambient>0.97 0.97 0.97 1</ambient>
+      <shadows>0</shadows> -->
       <ambient>0.97 0.97 0.97 1</ambient>
-      <shadows>0</shadows>
+      <shadows>1</shadows>
       <sky>
         <time>17</time>
         <clouds>
@@ -716,6 +720,192 @@
     </model>
     <!-- Стены END -->
 
+    <!-- Стол START -->
+    <model name="table">
+      <static>true</static>
+      <pose>0.8 -1 0 0 0 0</pose>
+      <allow_auto_disable>1</allow_auto_disable>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/table.stl</uri>
+              <scale>0.016 0.016 0.016</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/table.stl</uri>
+              <scale>0.016 0.016 0.016</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>/workspace/src/world_description/world/materials/scripts</uri>
+              <uri>/workspace/src/world_description/world/materials/textures</uri>
+              <name>Table/Marble_Lightmap</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- Стол END -->
 
+    <!-- Тарелка START -->
+    <model name="bowl">
+      <static>true</static>
+      <pose>0.102348 0.102563 1.008648 0.0 0.0 0.0</pose>
+      <allow_auto_disable>1</allow_auto_disable>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/bowl.stl</uri>
+              <scale>0.002 0.002 0.002</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/bowl.stl</uri>
+              <scale>0.002 0.002 0.002</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Blue</name>
+            </script>
+            <!-- <ambient>1 0.764706 0.305882 1</ambient> -->
+            <ambient>0.0 0.0 0.4 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- Тарелка END -->
+
+    <!-- Конфета-1 START -->
+    <model name="candy1">
+      <static>false</static>
+      <pose>0.283069 0.329710 1.011942 -1.542624 -0.112146 -0.016052</pose>
+      <allow_auto_disable>1</allow_auto_disable>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/candy1.stl</uri>
+              <scale>0.002 0.002 0.002</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/candy1.stl</uri>
+              <scale>0.002 0.002 0.002</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Green</name>
+            </script>
+            <!-- <ambient>1 0.764706 0.305882 1</ambient> -->
+            <!-- <ambient>0.0 0.0 0.4 1</ambient> -->
+            <diffuse>0.7 0.9 0 1</diffuse>
+          </material>
+        </visual>
+<!--         <inertial name="inertial">
+          <pose>0.283069 0.329710 1.011942 -1.542624 -0.112146 -0.016052</pose>
+          <mass>0.56</mass>
+          <inertia>
+            <ixx>0.004878</ixx>
+            <ixy>-6.2341e-07</ixy>
+            <ixz>-7.4538e-07</ixz>
+            <iyy>0.00090164</iyy>
+            <iyz>-0.00014394</iyz>
+            <izz>0.0042946</izz>
+          </inertia>
+        </inertial> -->
+      </link>
+    </model>
+    <!-- Конфета-1 END -->
+
+
+    <!-- Конфета-2 START -->
+    <model name="candy2">
+      <static>false</static>
+      <pose>0.328299 0.328299 1.058662 -3.135477 -0.112146 -0.016052</pose>
+      <allow_auto_disable>1</allow_auto_disable>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/candy2.stl</uri>
+              <scale>0.005 0.005 0.005</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/candy2.stl</uri>
+              <scale>0.005 0.005 0.005</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Red</name>
+            </script>
+            <!-- <ambient>1 0.764706 0.305882 1</ambient> -->
+            <!-- <ambient>0.0 0.0 0.4 1</ambient> -->
+            <diffuse>0.7 0.9 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- Конфета-2 END -->
+
+
+    <!-- Конфета-3 START -->
+    <model name="candy3">
+      <static>false</static>
+      <pose>0.329830 0.359447 0.914773 -0.517868 -1.335332 -0.404596</pose>
+      <allow_auto_disable>1</allow_auto_disable>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/candy3.stl</uri>
+              <scale>0.003 0.003 0.003</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/candy3.stl</uri>
+              <scale>0.003 0.003 0.003</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+            <!-- <ambient>1 0.764706 0.305882 1</ambient> -->
+            <!-- <ambient>0.0 0.0 0.4 1</ambient> -->
+            <diffuse>0.7 0.9 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- Конфета-3 END -->
+    
   </world>
 </sdf>

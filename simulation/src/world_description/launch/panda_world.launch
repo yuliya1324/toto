@@ -60,7 +60,7 @@
   </include>
 
   <!-- Spawn urdf of the robot -->
-  <node name="robot_description" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model panda $(arg initial_joint_states)"/>
+  <node name="robot_description" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model panda $(arg initial_joint_states) -z 1.01"/>
 
   <!-- create a tf with base frame as 'base' (to match aml_robot) -->
   <node pkg="tf" type="static_transform_publisher" name="base_to_link0" args="0 0 0 0 0 0 1 base panda_link0 100" />
