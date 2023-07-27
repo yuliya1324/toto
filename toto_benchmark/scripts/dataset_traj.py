@@ -81,7 +81,7 @@ class FrankaDatasetTraj(Dataset):
                     rew = traj[key][-1]
                     traj[key] = traj[key][max(-1200, -len(traj[key]))::self.subsample_period]
                     traj[key][-1] = rew
-                else:
+                elif key in traj:
                     traj[key] = traj[key][max(-1200, -len(traj[key]))::self.subsample_period]
 
     def process_demos(self):
@@ -117,9 +117,16 @@ class FrankaDatasetTraj(Dataset):
         print("Start loading images...")
         for path in self.demos:
             path['images'] = []
-            for i in range(path['observations'].shape[0]):
+            path['depth_images'] = []
+            for i in range(len(path['cam0c'])):
                 img_path = os.path.join(self.logs_folder, os.path.join('data', path['traj_id'], path['cam0c'][i]))
-                path['images'].append(img_path)
+                depth_path = os.path.join(self.logs_folder, os.path.join('data', path['traj_id'], path['cam0d'][i]))
+                img = Image.open(img_path)
+                depth_img = Image.open(depth_path)
+                path['images'].append(np.asarray(img))
+                path['depth_images'].append(np.asarray(depth_img))
+            path['images'] = np.array(path['images'])
+            path['depth_images'] = np.array(path['depth_images'])
         print("Finished loading images.")
 
 
@@ -130,7 +137,7 @@ class FrankaDatasetTraj(Dataset):
         datapoint = dict()
         traj = self.demos[idx]
         datapoint["length"] = traj["observations"].shape[0] * 4
-        for key in ['observations', 'actions', 'rewards', 'embeddings']:
+        for key in ['observations', 'actions', 'rewards', 'embeddings', 'images', 'depth_images']:
             if key == "rewards":
                 datapoint[key] = np.zeros((self.H))
                 reward = np.empty(traj[key].shape[0])
@@ -138,22 +145,32 @@ class FrankaDatasetTraj(Dataset):
                 reward[-1] -= traj[key][-1]
                 datapoint[key][:traj[key].shape[0]] = reward
                 datapoint[key] = np.expand_dims(datapoint[key], axis=-1)
-            else:
+                datapoint[key] = np_to_tensor(datapoint[key], self.device)
+            elif key in ['images', 'depth_images']:
+                shape = list(traj[key].shape)
+                shape[0] = self.H - shape[0]
+                pads = np.zeros(tuple(shape))
+                datapoint[key] = np.concatenate((traj[key], pads), axis=0)
+                datapoint[key] = np_to_tensor(datapoint[key], self.device)
+            elif key in traj:
                 datapoint[key] = np.zeros((self.H, traj[key].shape[1]))
                 datapoint[key][:traj[key].shape[0], :] = traj[key][:traj[key].shape[0], :]
-            datapoint[key] = np_to_tensor(datapoint[key], self.device)
+                datapoint[key] = np_to_tensor(datapoint[key], self.device)
 
         # if self.noise:
         #     datapoint['inputs'] += torch.randn_like(datapoint['inputs']) * self.noise
         # if self.cameras:
         #     for _c in self.cameras:
-        #         try:
-        #             img = Image.open(self.images[idx])
-        #         except:
-        #             print("\n***Image path does not exist. Set the image directory as logs_folder in the config.")
-        #             raise
-        #         datapoint[_c] = img.crop((200, 0, 500, 400)) if self.crop_images else img
-        #         datapoint[_c] = (self.img_transform_fn(datapoint[_c]) if self.img_transform_fn
-        #                          else datapoint[_c])
-        #         img.close()
+        #         # datapoint[_c] = []
+        #         # for i in range(traj['observations'].shape[0]):
+        #         #     img = Image.open(traj[_c][i])  # Assuming RGB for now
+        #         #     datapoint[_c].append(np.asarray(img))
+        #         #     img.close()
+        #         # datapoint[_c] = np.array(datapoint[_c]) # (horizon, img_h, img_w, 3)
+        #         shape = traj[_c].shape
+        #         shape[0] = self.H - shape[0]
+        #         pads = np.zeros(shape)
+        #         datapoint[_c] = np.concatenate((datapoint[_c], pads), axis=0)
+        #         datapoint[_c] = np_to_tensor(datapoint[_c], self.device)
+
         return datapoint
