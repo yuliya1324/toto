@@ -906,6 +906,42 @@
       </link>
     </model>
     <!-- Конфета-3 END -->
+
+
+    <!-- Ложка START -->
+    <model name="teaspoons">
+      <static>true</static>
+      <pose>0.116574 0.398148 0.998672 -0.033400 0.082889 -2.068232</pose>
+      <allow_auto_disable>1</allow_auto_disable>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/teaspoons.stl</uri>
+              <scale>0.003 0.003 0.003</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>/workspace/src/world_description/world/objects/teaspoons.stl</uri>
+              <scale>0.003 0.003 0.003</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Black</name>
+            </script>
+            <!-- <ambient>1 0.764706 0.305882 1</ambient> -->
+            <!-- <ambient>0.0 0.0 0.4 1</ambient> -->
+            <diffuse>0.7 0.9 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- Ложка END -->
     
   </world>
 </sdf>
