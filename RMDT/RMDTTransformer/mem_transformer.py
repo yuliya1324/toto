@@ -895,7 +895,7 @@ class MemTransformerLM(nn.Module):
             action_embeddings = self.action_embeddings(actions)
             img_embeddings = self.img_embeddings(img)
             token_embeddings = torch.zeros((states.shape[0], states.shape[1]*4 - int(target is None), self.d_embed), dtype=torch.float32, device=state_embeddings.device)
-            timesteps = torch.arange(states.shape[1])
+            timesteps = torch.arange(states.shape[1], device=token_embeddings.device)
             time_embeddings = self.embed_timestep(timesteps)
             time_embeddings = time_embeddings.unsqueeze(0).expand(states.shape[0], time_embeddings.shape[0], time_embeddings.shape[1])
 

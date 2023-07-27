@@ -1,19 +1,48 @@
 default:
-    - override hydra/output: local
-    - override hydra/launcher: local
-
+- override hydra/output: local
+- override hydra/launcher: local
 data:
-  subsample_period: 1 # TODO: change this to n if subsampled to use 1 of every n frames during training. This will reduce the robot's control frequency correspondingly
+  pickle_fn: assets/cloud-dataset-scooping/scooping_parsed_with_embeddings_moco_conv5-004.pkl
+  subsample_period: 20
+  in_dim: 7
+  out_dim: 7
+  H: 60
+  top_k: 1
   images:
-    cameras:
-      - 'cam0c' # RGB input
-      - 'cam0d' # depth input
-
+    cameras: []
+    im_h: 480
+    im_w: 640
+    per_img_out: 128
+    crop: true
+  noise: 0.0
+  logs_folder: assets/cloud-dataset-scooping
 agent:
-  type: 'collaborator_agent' # TODO (optional): feel free to rename your agent here. If changed, need to update agents/__init__.py correspondingly
-  # TODO (Optional): if you plan to use any existing visual representation model in TOTO, uncomment and specify the vision model type as follows:
-  # vision_model: <vision model of your choice> # Available options: ['moco_conv5_robocloud', 'byol_scoop', 'byol_pour', 'r3m', 'resnet50']
-
-
-# TODO (optional): additional keys (if any) for initializing the agent should go here
-# This config will be an input to the _init_agent_from_config function that you will implement for your agent
+  type: collaborator_agent
+  agent_path: outputs/2023-07-25/20-08-18/RMDT_50.pth
+  vision_model: moco_conv5_robocloud
+  vision_model_path: assets/moco_conv5_robocloud.pth
+  description: NA
+  n_layer: 3
+  n_head: 1
+  d_model: 128
+  d_head: 128
+  d_inner: 128
+  dropout: 0.2
+  dropatt: 0.05
+  MEM_LEN: 15
+  ext_len: 0
+  num_mem_tokens: 15
+  mem_at_end: true
+  learning_rate: 0.01
+  context_length: 20
+  sections: 3
+  grad_norm_clip: 1.0
+training:
+  lr: 0.001
+  seed: 0
+  epochs: 80
+  device: cuda:0
+  batch_size: 128
+  save_every_x_epoch: 10
+debug: false
+saved_folder: /src/outputs/2023-07-25/20-08-18

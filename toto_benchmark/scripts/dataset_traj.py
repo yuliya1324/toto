@@ -128,7 +128,6 @@ class FrankaDatasetTraj(Dataset):
 
     def __getitem__(self, idx):
         datapoint = dict()
-        # traj_id, start, end = self.idx[idx]
         traj = self.demos[idx]
         datapoint["length"] = traj["observations"].shape[0] * 4
         for key in ['observations', 'actions', 'rewards', 'embeddings']:
