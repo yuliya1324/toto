@@ -17,6 +17,7 @@
 - Перейти в рабочую директорию ```cd workspace```
 - Собрать проект ```catkin build```
 - Прописать пути ```source devel/setup.bash```
+- Запустить симулятор ```roslaunch world_description panda_world.launch```
 
 
 #### Прочие команды 
