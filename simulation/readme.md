@@ -13,19 +13,28 @@
 
 #### Запустить симулятор
 
-- Запустить docker-контейнер ```sudo ./run-scripts/run_docker.sh```.
+- Запустить docker-контейнер ```sudo ./run-scripts/run_docker.sh```
 - Перейти в рабочую директорию ```cd workspace```
 - Собрать проект ```catkin build```
 - Прописать пути ```source devel/setup.bash```
 - Запустить симулятор ```roslaunch world_description panda_world.launch```
 
-#### Запустить камеру для сбора датасета
 
-- Запустить docker-контейнер ```sudo ./run-scripts/run_docker.sh```.
+#### Запустить управление роботом
+
+- Зайти в docker-контейнер <code>sudo docker exec -ti sim bash</code>
 - Перейти в рабочую директорию ```cd workspace```
-- Собрать проект ```catkin build```
 - Прописать пути ```source devel/setup.bash```
-- Запустить симулятор ```roslaunch room_camera camera.launch```
+- Запустить симулятор ```roslaunch robot_control move_robot.launch```
+
+
+#### Команды для управления роботом
+
+- Запустить сбор датасета
+- Взять ложку
+- Выполнить траекторию по зачерпыванию ложкой
+- Управление джоинтами робота с клавиатуры ```rosrun robot_control keyboard_move_robot```
+
 
 #### Прочие команды 
 
@@ -35,6 +44,8 @@
 - Простое раскачивание робота ```
 cd /workspace/src/libs/panda_simulator/panda_simulator_examples/scripts
 python3 move_robot.py```
+- Отдельно запустить камеру ```roslaunch room_camera camera.launch```
+- Установить робота в нейтральное положение ```rosrun robot_control set_neutral_pose```
 
 
 #### Сообщения для публикации

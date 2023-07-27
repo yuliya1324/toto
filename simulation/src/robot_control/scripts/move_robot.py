@@ -1,15 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from sensor_msgs.msg import JointState
 from franka_core_msgs.msg import JointCommand, RobotState
+from std_msgs.msg import String
 import numpy as np
 from copy import deepcopy
+from panda_robot import PandaArm
 
 vals = []
 vels = []
 names = ['panda_joint1','panda_joint2','panda_joint3','panda_joint4','panda_joint5','panda_joint6','panda_joint7']
 
 neutral_pose = [-0.017792060227770554, -0.7601235411041661, 0.019782607023391807, -2.342050140544315, 0.029840531355804868, 1.5411935298621688, 0.7534486589746342]
+
+step = 0.01
 
 def callback(msg):
 
@@ -25,21 +29,47 @@ def callback(msg):
     vels = deepcopy(temp_vels)
 
 
+def take_spoon(msg):
+    pass
+
+
+def scoop_spoon(msg):
+    pass
+
+
+def set_neutral_pose(msg):
+    send_to_neutral()
+
+
+def move_joint(msg):
+    global vals
+    [joint, direction] = list(map(int, msg.data.split(':')))
+    pubmsg = JointCommand()
+    pubmsg.names = names
+    pubmsg.position = vals
+    pubmsg.position[joint-1] += (step * direction)
+    pubmsg.mode = pubmsg.POSITION_MODE
+    pub.publish(pubmsg)
+    vals = pubmsg.position
+
+
+    print(pubmsg)
+
 
 t = 0
 def state_callback(msg):
     global t
     if t%100 == 0:
         t = 1
-        rospy.loginfo("============= Current robot state: ============\n" )
-        rospy.loginfo("Cartesian vel: \n{}\n".format(msg.O_dP_EE) )
-        rospy.loginfo("Gravity compensation torques: \n{}\n".format(msg.gravity) )
-        rospy.loginfo("Coriolis: \n{}\n".format(msg.coriolis) )
-        rospy.loginfo("Inertia matrix: \n{}\n".format(msg.mass_matrix) )
-        rospy.loginfo("Zero Jacobian: \n{}\n".format(msg.O_Jac_EE) )
+        # rospy.loginfo("============= Current robot state: ============\n" )
+        # rospy.loginfo("Cartesian vel: \n{}\n".format(msg.O_dP_EE) )
+        # rospy.loginfo("Gravity compensation torques: \n{}\n".format(msg.gravity) )
+        # rospy.loginfo("Coriolis: \n{}\n".format(msg.coriolis) )
+        # rospy.loginfo("Inertia matrix: \n{}\n".format(msg.mass_matrix) )
+        # rospy.loginfo("Zero Jacobian: \n{}\n".format(msg.O_Jac_EE) )
 
 
-        rospy.loginfo("\n\n========\n\n")
+        # rospy.loginfo("\n\n========\n\n")
 
     t+=1
 
@@ -62,9 +92,9 @@ def send_to_neutral():
         curr_val = deepcopy(vals)
 
 if __name__ == '__main__':
-    
+    rospy.init_node("move_robot")\
 
-    rospy.init_node("test_node")
+    robot = PandaArm()
 
     rospy.wait_for_service('/controller_manager/list_controllers')
 
@@ -73,8 +103,26 @@ if __name__ == '__main__':
 
     pub = rospy.Publisher('/panda_simulator/motion_controller/arm/joint_commands',JointCommand, queue_size = 1, tcp_nodelay = True)
 
+    pub_take_spoon = rospy.Publisher('/robot_control/take_spoon', String, queue_size = 1)
+    pub_scoop_spoon = rospy.Publisher('/robot_control/scoop_spoon', String, queue_size = 1)
+
     # Subscribe to robot joint state
     rospy.Subscriber('/panda_simulator/custom_franka_state_controller/joint_states', JointState, callback)
+
+    # Take spoon 
+    rospy.Subscriber('/robot_control/take_spoon', String, take_spoon)
+
+    # Scoop with spoon
+    rospy.Subscriber('/robot_control/scoop_spoon', String, scoop_spoon)
+
+    # Move joint
+    rospy.Subscriber('/move_joint', String, move_joint)
+
+    # Set to neutral_pose
+    rospy.Subscriber('/set_neutral_pose', String, set_neutral_pose) 
+
+
+
 
     # Subscribe to robot state (Refer JointState.msg to find all available data. 
     # Note: All msg fields are not populated when using the simulated environment)
@@ -109,22 +157,22 @@ if __name__ == '__main__':
     pubmsg.names = names # names of joints (has to be 7 and in the same order as the command fields (positions, velocities, efforts))
     while not rospy.is_shutdown():
 
-        elapsed_time_ += period
+        # elapsed_time_ += period
 
-        delta = 3.14 / 16.0 * (1 - np.cos(3.14 / 5.0 * elapsed_time_.to_sec())) * 0.2
+        # delta = 3.14 / 16.0 * (1 - np.cos(3.14 / 5.0 * elapsed_time_.to_sec())) * 0.2
 
-        for j in range(len(vals)):
-            if j == 4:
-                vals[j] = initial_pose[j] - delta
-            else:
-                vals[j] = initial_pose[j] + delta
+        # for j in range(len(vals)):
+        #     if j == 4:
+        #         vals[j] = initial_pose[j] - delta
+        #     else:
+        #         vals[j] = initial_pose[j] + delta
 
-        pubmsg.position = vals # JointCommand msg has other fields (velocities, efforts) for
-                               # when controlling in other control mode
-        # pubmsg.effort = [0.,0.,0.,0.,0.,0.,0.]
-        pubmsg.mode = pubmsg.POSITION_MODE # Specify control mode (POSITION_MODE, VELOCITY_MODE, IMPEDANCE_MODE (not available in sim), TORQUE_MODE)
+        # pubmsg.position = vals # JointCommand msg has other fields (velocities, efforts) for
+        #                        # when controlling in other control mode
+        # # pubmsg.effort = [0.,0.,0.,0.,0.,0.,0.]
+        # pubmsg.mode = pubmsg.POSITION_MODE # Specify control mode (POSITION_MODE, VELOCITY_MODE, IMPEDANCE_MODE (not available in sim), TORQUE_MODE)
 
-        pub.publish(pubmsg)
+        # pub.publish(pubmsg)
         rate.sleep()
 
 

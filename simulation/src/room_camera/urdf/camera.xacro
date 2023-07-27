@@ -3,13 +3,13 @@
 <robot name="robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:property name="M_PI" value="3.1415926535897931" />
   <static>true</static>
-  <origin xyz="0 0 1.75" rpy=" 0 1.57079633 0"/>
+  <origin xyz="0.675391 -0.435263 1.477533" rpy=" 0.019316 0.230083 2.154879"/>
 
   <xacro:include filename="$(find room_camera)/urdf/camera.gazebo" />
   <xacro:include filename="$(find world_description)/materials/materials.xacro" />
 
   <link name='base'>
-    <pose>0.675391 -0.435263 1.477533 0.019316 0.230083 2.154879</pose>
+    <pose>0 0 1.5 0 0 0</pose>
     <inertial>
       <mass value="1.0"/>
       <origin xyz="0.0 0 0.0" rpy=" 0 0 0"/>
@@ -23,14 +23,14 @@
     <collision>
       <origin xyz="0 0 0.0" rpy=" 0 0 0"/>
       <geometry>
-        <box size=".2 .2 .2"/>
+        <box size=".0 .0 .0"/>
       </geometry>
     </collision>
 
     <visual>
       <origin xyz="0 0 0.0" rpy=" 0 0 0"/>
       <geometry>
-        <box size=".2 .6 .6"/>
+        <box size=".0 .0 .0"/>
       </geometry>
     </visual>
   </link>
