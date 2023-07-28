@@ -69,6 +69,8 @@ python toto_benchmark/scripts/test_stub_env.py -f=toto_benchmark/outputs/collabo
 
 Окружение: ROS Noetic, симулятор Gazebo.
 
+Симуляция лежит в папке ```cd simulation```
+
 Перед первым запуском:
 
 - склонировать репозиторий и установить все модули из файла  ```.gitmodules``` по указанным адресам
