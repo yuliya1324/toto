@@ -512,7 +512,7 @@ class MemTransformerLM(nn.Module):
                  num_mem_tokens=None, read_mem_from_cache=False, mem_at_end=True,
                  cutoffs=[], adapt_inp=False,
                  same_length=False, attn_type=0, clamp_len=-1, max_ep_len=100,
-                 sample_softmax=-1, STATE_DIM=None, ACTION_DIM=None, IMG_DIM=None, n_token=None):
+                 sample_softmax=-1, STATE_DIM=None, ACTION_DIM=None, IMG_DIM=None, n_token=None, DEP_DIM=None):
         super(MemTransformerLM, self).__init__()
         #self.n_token = n_token
 
@@ -544,6 +544,8 @@ class MemTransformerLM(nn.Module):
             self.state_encoder = nn.Linear(self.STATE_DIM, d_embed) #RMT MUJOCO
             self.action_embeddings = nn.Linear(self.ACTION_DIM, d_embed) #RMT MUJOCO
             self.img_embeddings = nn.Linear(self.IMG_DIM, d_embed) #RMT MUJOCO
+            if DEP_DIM is not None:
+                self.img_depth_embeddings = nn.Linear(DEP_DIM, d_embed)
             self.embed_ln = nn.LayerNorm(d_embed)
             self.head = nn.Sequential(*([nn.Linear(d_embed, self.ACTION_DIM)] + ([nn.Tanh()])))
         
@@ -828,7 +830,7 @@ class MemTransformerLM(nn.Module):
 
         return core_out, new_mems
 
-    def forward(self, states, actions, rtgs, target, timesteps, *mems, mem_tokens=None, img=None, length=None): 
+    def forward(self, states, actions, rtgs, target, timesteps, *mems, mem_tokens=None, img=None, length=None, depth=None): 
         if self.mujoco_mode:
             if not mems: mems = self.init_mems(states.device)
             state_embeddings = self.state_encoder(states) 
@@ -890,19 +892,38 @@ class MemTransformerLM(nn.Module):
 
         elif self.toto_mode:
             if not mems: mems = self.init_mems(states.device)
+            if depth is not None and img is not None:
+                num = 5
+                img_embeddings = self.img_embeddings(img)
+                depth_embeddings = self.img_depth_embeddings(depth)
+            elif img is not None:
+                num = 4
+                img_embeddings = self.img_embeddings(img)
+            elif depth is not None:
+                num = 4
+                depth_embeddings = self.img_depth_embeddings(depth)
+            else:
+                num = 3
+
             state_embeddings = self.state_encoder(states) 
             rtg_embeddings = self.ret_emb(rtgs)
             action_embeddings = self.action_embeddings(actions)
-            img_embeddings = self.img_embeddings(img)
-            token_embeddings = torch.zeros((states.shape[0], states.shape[1]*4 - int(target is None), self.d_embed), dtype=torch.float32, device=state_embeddings.device)
+            token_embeddings = torch.zeros((states.shape[0], states.shape[1]*num - int(target is None), self.d_embed), dtype=torch.float32, device=state_embeddings.device)
             timesteps = torch.arange(states.shape[1], device=token_embeddings.device)
             time_embeddings = self.embed_timestep(timesteps)
             time_embeddings = time_embeddings.unsqueeze(0).expand(states.shape[0], time_embeddings.shape[0], time_embeddings.shape[1])
 
-            token_embeddings[:, ::4, :] = rtg_embeddings  + time_embeddings
-            token_embeddings[:, 1::4, :] = state_embeddings  + time_embeddings
-            token_embeddings[:, 2::4, :] = img_embeddings  + time_embeddings
-            token_embeddings[:, 3::4, :] = action_embeddings[:,-states.shape[1] + int(target is None):,:] + time_embeddings[:,-states.shape[1] + int(target is None):,:]
+            token_embeddings[:, ::num, :] = rtg_embeddings  + time_embeddings
+            token_embeddings[:, 1::num, :] = state_embeddings  + time_embeddings
+            token_embeddings[:, num-1::num, :] = action_embeddings[:,-states.shape[1] + int(target is None):,:] + time_embeddings[:,-states.shape[1] + int(target is None):,:]
+            
+            if depth is not None and img is not None:
+                token_embeddings[:, 2::num, :] = img_embeddings  + time_embeddings
+                token_embeddings[:, 3::num, :] = depth_embeddings  + time_embeddings
+            elif img is not None:
+                token_embeddings[:, 2::num, :] = img_embeddings  + time_embeddings
+            elif depth is not None:
+                token_embeddings[:, 2::num, :] = depth_embeddings  + time_embeddings
             
             hidden, new_mems = self._forward(token_embeddings, mems=mems, mem_tokens=mem_tokens, lengths=length)
             hidden = hidden.permute(1,0,2)
@@ -924,9 +945,9 @@ class MemTransformerLM(nn.Module):
                 logits = self.head(hidden)[:, -tgt_len:] # was tgt_len
 
             if actions is not None:
-                logits = logits[:, 2::4, :]
+                logits = logits[:, num-2::num, :]
             else:
-                logits = logits[:, 2:, :]
+                logits = logits[:, num-2:, :]
 
 
             loss = None

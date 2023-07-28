@@ -5,7 +5,8 @@ import torchvision.models as models
 class PretrainedResNet(nn.Module):
     def __init__(self, im_h, im_w, out_size, fix_resnet=True):
         super(PretrainedResNet, self).__init__()
-        self.net = models.resnet34(pretrained=True)
+        self.net = models.resnet18(pretrained=False)
+        self.net.conv1 = torch.nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         self.num_ftrs = self.net.fc.in_features
         self.net.fc = nn.modules.linear.Identity()
         self.out_size = out_size

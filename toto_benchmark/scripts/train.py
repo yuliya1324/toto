@@ -114,9 +114,12 @@ def main(cfg : DictConfig) -> None:
         if epoch % cfg.training.save_every_x_epoch == 0:
             agent.save(os.getcwd(), filename=f"RMDT_{epoch}.pth", epoch=epoch)
 
-        wandb.log({"Train Loss": train_metric.mean, "Epoch": epoch})
-        wandb.log({"Test Loss": test_metric.mean, "Epoch": epoch})
-        wandb.log({"Acc Train Loss": acc_loss, "Epoch": epoch})
+        wandb.log({
+            "Train Loss": train_metric.mean,
+            "Test Loss": test_metric.mean,
+            "Acc Train Loss": acc_loss,
+            "Epoch": epoch
+            })
 
     agent.save(os.getcwd(), filename=f"RMDT_final.pth")
     log.info("Saved agent to {}".format(os.getcwd()))
