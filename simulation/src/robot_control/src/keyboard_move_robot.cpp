@@ -43,6 +43,9 @@ int main(int argc, char *argv[]) {
     while (ros::ok()) {
         int c = getch();   // call your non-blocking input function
 
+        std::cout << "char: " << c << std::endl;
+        double joint_val;
+
         std_msgs::String msg;
         std::stringstream msgText;
 
@@ -81,12 +84,16 @@ int main(int argc, char *argv[]) {
         } else {
             switch (c) {
                 case FORWARD:
-                    msgText << jointIndex << ":" << FORWARD_DIRECTION;
+                    std::cout << "Input joint value: ";
+                    std::cin >> joint_val;
+                    msgText << jointIndex << ":" << FORWARD_DIRECTION * joint_val;
                     msg.data = msgText.str();
                     joint_move.publish(msg);
                     break;
                 case INVERSE:
-                    msgText << jointIndex << ":" << INVERSE_DIRECTION;
+                    std::cout << "Input joint value: ";
+                    std::cin >> joint_val;
+                    msgText << jointIndex << ":" << INVERSE_DIRECTION * joint_val;
                     msg.data = msgText.str();
                     joint_move.publish(msg);
                     break;
