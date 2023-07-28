@@ -1,5 +1,4 @@
 // Считывание нажатий клавиш на клавиатуре
-//=====rosrun armbot_move moveMotor
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 
@@ -35,74 +34,37 @@ int main(int argc, char *argv[]) {
 
     ros::NodeHandle n;
     ros::Publisher joint_move = n.advertise<std_msgs::String>("move_joint", 1000);
+    ros::Rate loop_rate(10);
 
-    int jointIndex = 0;
-
-    ROS_INFO("Select the joint (click on the number): from 1 to 7\n0) Reset (if joint has been selected)");
-
-    while (ros::ok()) {
-        int c = getch();   // call your non-blocking input function
-
-        std::cout << "char: " << c << std::endl;
+      while (ros::ok()) {
         double joint_val;
+        int joint_id;
+
+        std::cout << "Input joint_id (from 1 to 7): " << std::endl;
+        std::cin >> joint_id;
+
+        if (joint_id < 1 && joint_id > 7) {
+            std::cout << "Invalid value jpint_id";
+            continue;
+        } 
+
+        std::cout << "Input joint value (0.01 - 1): " << std::endl;
+        std::cin >> joint_val;
+
+        if (joint_val < -1 && joint_val > 1) {
+            std::cout << "Invalid value joint";
+            continue;
+        } 
 
         std_msgs::String msg;
         std::stringstream msgText;
 
-        if (jointIndex == 0) {
-            switch (c) {
-                case '1':
-                    jointIndex = 1;
-                    break;
-                case '2':
-                    jointIndex = 2;
-                    break;
-                case '3':
-                    jointIndex = 3;
-                    break;
-                case '4':
-                    jointIndex = 4;
-                    break;
-                case '5':
-                    jointIndex = 5;
-                    break;
-                case '6':
-                    jointIndex = 6;
-                    break;
-                case '7':
-                    jointIndex = 7;
-                    break;    
-                default:
-                    ROS_ERROR("Invalid button pressed. Please click 1, 2, 3, 4, 5, 6, 7");
-            }
+        msgText << joint_id << ":" << joint_val;
+        msg.data = msgText.str();
+        joint_move.publish(msg);
 
-            if (jointIndex == 0) {
-                ROS_INFO("No joint selected");
-            } else {
-                ROS_INFO("Joint selected: %d, put ↑ (forward) or ↓ (inverse) for move joint.", jointIndex);
-            }
-        } else {
-            switch (c) {
-                case FORWARD:
-                    std::cout << "Input joint value: ";
-                    std::cin >> joint_val;
-                    msgText << jointIndex << ":" << FORWARD_DIRECTION * joint_val;
-                    msg.data = msgText.str();
-                    joint_move.publish(msg);
-                    break;
-                case INVERSE:
-                    std::cout << "Input joint value: ";
-                    std::cin >> joint_val;
-                    msgText << jointIndex << ":" << INVERSE_DIRECTION * joint_val;
-                    msg.data = msgText.str();
-                    joint_move.publish(msg);
-                    break;
-                case RESET:
-                   jointIndex = 0;
-                   ROS_INFO("Joint was reset.\nSelect the joint (click on the number): from 1 to 7\n0) Reset (if joint has been selected)");
-                   break;
-            }
-        }
+        ros::spinOnce();
+        loop_rate.sleep();
     }
 
     ros::spin();

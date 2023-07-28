@@ -30,10 +30,14 @@
 
 #### Команды для управления роботом
 
-- Запустить сбор датасета
-- Взять ложку
-- Выполнить траекторию по зачерпыванию ложкой
 - Управление джоинтами робота с клавиатуры ```rosrun robot_control keyboard_move_robot```
+- Повернуться  ```rostopic pub /robot_rotation std_msgs/String "data: ''" --once```
+- Взять ложку ```rostopic pub /robot_control/take_spoon std_msgs/String "data: ''" --once```
+- Закрыть гриппер ```rostopic pub close_gripper std_msgs/String "data: ''" --once```
+- Подняться ```rostopic pub /robot_up std_msgs/String "data: ''" --once```
+- Повернуться в сторону тарелки ```rostopic pub /robot_move_bowl std_msgs/String "data: ''" --once```
+- Опуститься ```rostopic pub /robot_down_bowl std_msgs/String "data: ''" --once```
+- Зачерпнуть ```rostopic pub /robot_control/scoop_spoon std_msgs/String "data: ''" --once```
 
 
 #### Прочие команды 
@@ -45,7 +49,9 @@
 cd /workspace/src/libs/panda_simulator/panda_simulator_examples/scripts
 python3 move_robot.py```
 - Отдельно запустить камеру ```roslaunch room_camera camera.launch```
-- Установить робота в нейтральное положение ```rosrun robot_control set_neutral_pose```
+- Установить робота в нейтральное положение ```rostopic pub /set_neutral_pose std_msgs/String "data: ''" --once```
+- Открыть гриппер ```rostopic pub /open_gripper std_msgs/String "data: ''" --once```
+- Закрыть гриппер ```rostopic pub /close_gripper std_msgs/String "data: ''" --once```
 
 
 #### Сообщения для публикации
@@ -57,8 +63,4 @@ velocity: [0, 0, 0, 0, 0, 0, 0],
 acceleration: [0, 0, 0, 0, 0, 0, 0],
 effort: [0, 0, 0, 0, 0, 0, 0]}" --once 
 ```
-
-
-
-<pre><code>rostopic pub move_robot_delay_gripper ur5_info/MoveUR5WithGripper "{positions: [position:[1.606798,-3.091649,2.827192,-1.962667,-1.436540,-0.000551]], delay: [0], gripperAngle: 0.0}" --once</code></pre>
 

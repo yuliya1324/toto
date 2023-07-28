@@ -758,6 +758,9 @@
       <static>true</static>
       <pose>0.102348 0.102563 1.008648 0.0 0.0 0.0</pose>
       <allow_auto_disable>1</allow_auto_disable>
+      <inertial name="inertial">
+        <mass>0.5</mass>
+      </inertial>
       <link name="link">
         <collision name="collision">
           <geometry>
@@ -790,9 +793,12 @@
 
     <!-- Конфета-1 START -->
     <model name="candy1">
-      <static>false</static>
+      <!-- <static>false</static> -->
       <pose>0.283069 0.329710 1.011942 -1.542624 -0.112146 -0.016052</pose>
       <allow_auto_disable>1</allow_auto_disable>
+      <inertial name="inertial">
+        <mass>0.001</mass>
+      </inertial>
       <link name="link">
         <collision name="collision">
           <geometry>
@@ -838,9 +844,12 @@
 
     <!-- Конфета-2 START -->
     <model name="candy2">
-      <static>false</static>
+      <!-- <static>false</static> -->
       <pose>0.328299 0.328299 1.058662 -3.135477 -0.112146 -0.016052</pose>
       <allow_auto_disable>1</allow_auto_disable>
+      <inertial name="inertial">
+        <mass>0.001</mass>
+      </inertial>
       <link name="link">
         <collision name="collision">
           <geometry>
@@ -874,9 +883,12 @@
 
     <!-- Конфета-3 START -->
     <model name="candy3">
-      <static>false</static>
+      <!-- <static>false</static> -->
       <pose>0.329830 0.359447 0.914773 -0.517868 -1.335332 -0.404596</pose>
       <allow_auto_disable>1</allow_auto_disable>
+      <inertial name="inertial">
+        <mass>0.001</mass>
+      </inertial>
       <link name="link">
         <collision name="collision">
           <geometry>
@@ -910,23 +922,46 @@
 
     <!-- Ложка START -->
     <model name="teaspoons">
-      <static>true</static>
-      <pose>0.116574 0.398148 0.998672 -0.033400 0.082889 -2.068232</pose>
-      <allow_auto_disable>1</allow_auto_disable>
+      <!-- <static>true</static> -->
+      <pose>0.132160 0.539224 1.042092 -1.582185 0.051346 -2.021373</pose>
+      <!-- <allow_auto_disable>1</allow_auto_disable> -->
       <link name="link">
+        <inertial name="inertial">
+          <mass>0.01</mass>
+          <inertia
+            ixx="0.304456"
+            ixy="0.644305"
+            ixz="-0.000169"
+            iyy="11.427076"
+            iyz="-0.000016"
+            izz="11.352903" />
+        </inertial>
         <collision name="collision">
           <geometry>
             <mesh>
-              <uri>/workspace/src/world_description/world/objects/teaspoons.stl</uri>
-              <scale>0.003 0.003 0.003</scale>
+              <uri>/workspace/src/world_description/world/objects/Long_Handle_Coffee_Scoop.stl</uri>
+              <scale>0.03 0.03 0.03</scale>
             </mesh>
           </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
         </collision>
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>/workspace/src/world_description/world/objects/teaspoons.stl</uri>
-              <scale>0.003 0.003 0.003</scale>
+              <uri>/workspace/src/world_description/world/objects/Long_Handle_Coffee_Scoop.stl</uri>
+              <scale>0.03 0.03 0.03</scale>
             </mesh>
           </geometry>
           <material>
@@ -939,6 +974,9 @@
             <diffuse>0.7 0.9 0 1</diffuse>
           </material>
         </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
       </link>
     </model>
     <!-- Ложка END -->
