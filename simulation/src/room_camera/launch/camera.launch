@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <param name="robot_description_camera" command="$(find xacro)/xacro '$(find room_camera)/urdf/camera.xacro'"/>
+
+    <node name="room_camera" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description_camera -model camera" />
+    <node name="camera_node" pkg="room_camera" type="camera.py" output="screen" />
+</launch>
