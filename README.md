@@ -49,7 +49,7 @@ We present 3 models:
 
 ![model-architecture](docs/images/model.PNG)
 
-Here's an example command to train RMDT on pooring dataset with precomputed embeddings for RGB images by pretrained MOCO as the image encoder. To add depth images set `cameras: ["cam0d"]` in config.
+Here's an example command to train RMDT on pouring dataset with precomputed embeddings for RGB images by pretrained MOCO as the image encoder. To add depth images set `cameras: ["cam0d"]` in config.
 
 ```
 python toto_benchmark/scripts/train.py --config-name train_rmt_d.yaml data.pickle_fn=assets/cloud-data-pooring/pooring_parsed_with_embeddings_moco_conv5_robocloud.pkl
