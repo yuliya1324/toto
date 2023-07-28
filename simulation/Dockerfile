@@ -123,3 +123,6 @@ RUN sudo apt install -y python3-roslib python3-sensor-msgs python3-opencv
 #RUN sudo apt-get install netcat
 
 RUN apt-get update && apt install -y ros-noetic-libfranka ros-noetic-franka-ros
+RUN pip install numpy-quaternion
+RUN pip3 install future
+RUN pip install rospy_message_converter

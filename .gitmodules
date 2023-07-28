@@ -16,3 +16,6 @@
 [submodule "simulation/src/libs/panda_simulator"]
 	path = simulation/src/libs/panda_simulator
 	url = ../../justagist/panda_simulator
+[submodule "simulation/src/libs/panda_robot"]
+	path = simulation/src/libs/panda_robot
+	url = ../../justagist/panda_robot
