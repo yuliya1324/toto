@@ -39,7 +39,7 @@ For more detailed dataset format information, see `assets/README.md`
 We present 3 models:
 - Decision Transformer
 - Recurrent Memory Decision Transformer
-- Masked Transformer Model
+- Masked Trajectory Model
 
 ### DT
 
@@ -62,6 +62,8 @@ python toto_benchmark/scripts/test_stub_env.py -f=toto_benchmark/outputs/collabo
 ```
 
 ### MTM
+
+[MTM](https://arxiv.org/pdf/2305.02968.pdf) uses masking in the input sequence and reconstructs the full original sequence. This way it gets more general knowledge of the world, can perform different tasks and performs better than DT on HalfCheetah, Hopper, Walker2d environments. 
 
 ## Симуляция выполнения траектории робота-манипулятора
 
