@@ -65,6 +65,8 @@ python toto_benchmark/scripts/test_stub_env.py -f=toto_benchmark/outputs/collabo
 
 [MTM](https://arxiv.org/pdf/2305.02968.pdf) uses masking in the input sequence and reconstructs the full original sequence. This way it gets more general knowledge of the world, can perform different tasks and performs better than DT on HalfCheetah, Hopper, Walker2d environments. 
 
+To start training on TOTO benchmark run toto_train.ipynb
+
 ## Симуляция выполнения траектории робота-манипулятора
 
 Робот Franka Emika Panda.
