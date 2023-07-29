@@ -42,8 +42,7 @@ We present 3 models:
 - Masked Trajectory Model
 
 ### DT
-Decision Transformer simply outputs the optimal actions by leveraging a causally masked Transformer.
-[DT](https://arxiv.org/pdf/2106.01345.pdf) 
+[DT](https://arxiv.org/pdf/2106.01345.pdf) Decision Transformer simply outputs the optimal actions by leveraging a causally masked Transformer.
 The model receives an RGB image and the robot’s joint angles: the former is embedded using MoCo (In-Domain) and concatenated with the latter at each step. DT uses a sub-sampling period of 8 and a history window of 10 frames. For inference and evaluation, the target return prompt is approximately chosen as the mean return from the top 10% of trajectories in the dataset for each task. 
 [TOTO](https://arxiv.org/pdf/2306.00942.pdf)
 
